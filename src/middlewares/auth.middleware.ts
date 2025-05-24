@@ -7,16 +7,16 @@ export const registerValidator = [
 ];
 
 export const registerVerifyOtpValidator = [
-  body('otp_id').notEmpty().withMessage('otp_id is required'),
+  body('otp_id').notEmpty().withMessage('ID OTP is required'),
   body('otp')
     .notEmpty()
-    .withMessage('otp is required')
+    .withMessage('OTP is required')
     .isLength({ max: 6, min: 6 })
     .withMessage('otp must be exactly 6 digits long')
 ];
 
 export const registerResendOtpValidator = [
-  body('otp_id').notEmpty().withMessage('otp_id is required'),
+  body('otp_id').notEmpty().withMessage('ID OTP is required'),
 ];
 
 export const loginValidator = [
@@ -25,16 +25,38 @@ export const loginValidator = [
 ];
 
 export const loginVerifyOtpValidator = [
-  body('otp_id').notEmpty().withMessage('otp_id is required'),
+  body('otp_id').notEmpty().withMessage('ID OTP is required'),
   body('otp')
     .notEmpty()
     .withMessage('otp is required')
     .isLength({ max: 6, min: 6 })
-    .withMessage('otp must be exactly 6 digits long')
+    .withMessage('OTP must be exactly 6 digits long')
 ];
 
 export const loginResendOtpValidator = [
-  body('otp_id').notEmpty().withMessage('otp_id is required'),
+  body('otp_id').notEmpty().withMessage('ID OTP is required'),
+];
+
+export const forgotPasswordRequestOtpValidator = [
+  body('email').isEmail().withMessage('Must be a valid email'),
+];
+
+export const forgotPasswordVerifyOtpValidator = [
+  body('otp_id').notEmpty().withMessage('ID OTP is required'),
+  body('otp')
+    .notEmpty()
+    .withMessage('OTP is required')
+    .isLength({ max: 6, min: 6 })
+    .withMessage('otp must be exactly 6 digits long')
+];
+
+export const forgotPasswordResendOtpValidator = [
+  body('otp_id').notEmpty().withMessage('ID OTP is required'),
+];
+
+export const forgotPasswordResetValidator = [
+  body('token').notEmpty().withMessage('ID OTP is required'),
+  body('password').notEmpty().withMessage('Password is required'),
 ];
 
 export const validateRequest = (req: Request, res: Response, next: NextFunction) => {

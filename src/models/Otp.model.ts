@@ -10,7 +10,7 @@ export interface IOtp extends Document {
 const OtpSchema: Schema = new Schema({
   email: { type: String, required: true },
   code: { type: String, required: true },
-  type: { type: String, enum: ['register', 'login'], required: true },
+  type: { type: String, enum: ['register', 'login', 'forgot-password'], required: true },
   expiresAt: { type: Date, required: true },
 });
 

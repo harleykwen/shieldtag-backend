@@ -15,7 +15,6 @@ const transporter = nodemailer.createTransport({
 });
 
 export async function sendMail(to: string, subject: string, text: string) {
-  console.log(process.env.MAILTRAP_USER, process.env.MAILTRAP_PASS)
   await transporter.sendMail({
     from: '"Candidate - Harli Fauzi Ramli" <no-reply@harleykwen.com>',
     to,

@@ -1,6 +1,6 @@
 import express, { NextFunction, Request, Response } from 'express';
-import { login, loginVerifyOtp, register, registerResendOtp, registerVerifyOtp, loginResendOtp } from '../controllers/auth.controller';
-import { loginValidator, loginVerifyOtpValidator, registerValidator, registerVerifyOtpValidator, loginResendOtpValidator, validateRequest, registerResendOtpValidator } from '../middlewares/auth.middleware';
+import { login, loginVerifyOtp, register, registerResendOtp, registerVerifyOtp, loginResendOtp, forgotPasswordRequestOtp, forgotPasswordVerifyOtp, forgotPasswordReset, forgotPasswordResendOtp } from '../controllers/auth.controller';
+import { loginValidator, loginVerifyOtpValidator, registerValidator, registerVerifyOtpValidator, loginResendOtpValidator, validateRequest, registerResendOtpValidator, forgotPasswordRequestOtpValidator, forgotPasswordVerifyOtpValidator, forgotPasswordResetValidator, forgotPasswordResendOtpValidator } from '../middlewares/auth.middleware';
 
 const router = express.Router();
 
@@ -67,6 +67,50 @@ router.post(
   },
   (req: Request, res: Response, next: NextFunction) => {
     loginResendOtp(req, res).catch(next);
+  }
+);
+
+router.post(
+  '/forgot-password/request-otp',
+  forgotPasswordRequestOtpValidator,
+  (req: Request, res: Response, next: NextFunction) => {
+    validateRequest(req, res, next)
+  },
+  (req: Request, res: Response, next: NextFunction) => {
+    forgotPasswordRequestOtp(req, res).catch(next);
+  }
+);
+
+router.post(
+  '/forgot-password/verify',
+  forgotPasswordVerifyOtpValidator,
+  (req: Request, res: Response, next: NextFunction) => {
+    validateRequest(req, res, next)
+  },
+  (req: Request, res: Response, next: NextFunction) => {
+    forgotPasswordVerifyOtp(req, res).catch(next);
+  }
+);
+
+router.post(
+  '/forgot-password/resend-otp',
+  forgotPasswordResendOtpValidator,
+  (req: Request, res: Response, next: NextFunction) => {
+    validateRequest(req, res, next)
+  },
+  (req: Request, res: Response, next: NextFunction) => {
+    forgotPasswordResendOtp(req, res).catch(next);
+  }
+);
+
+router.post(
+  '/forgot-password/reset',
+  forgotPasswordResetValidator,
+  (req: Request, res: Response, next: NextFunction) => {
+    validateRequest(req, res, next)
+  },
+  (req: Request, res: Response, next: NextFunction) => {
+    forgotPasswordReset(req, res).catch(next);
   }
 );
 
