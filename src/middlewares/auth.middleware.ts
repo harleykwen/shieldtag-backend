@@ -11,6 +11,19 @@ export const loginValidator = [
   body('password').notEmpty().withMessage('Password is required'),
 ];
 
+export const loginVerifyOtpValidator = [
+  body('otp_id').notEmpty().withMessage('otp_id is required'),
+  body('otp')
+    .notEmpty()
+    .withMessage('otp is required')
+    .isLength({ max: 6, min: 6 })
+    .withMessage('otp must be exactly 6 digits long')
+];
+
+export const resendOtpValidator = [
+  body('otp_id').notEmpty().withMessage('otp_id is required'),
+];
+
 export const validateRequest = (req: Request, res: Response, next: NextFunction) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
