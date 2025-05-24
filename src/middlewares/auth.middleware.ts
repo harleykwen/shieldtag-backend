@@ -6,6 +6,19 @@ export const registerValidator = [
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
 ];
 
+export const registerVerifyOtpValidator = [
+  body('otp_id').notEmpty().withMessage('otp_id is required'),
+  body('otp')
+    .notEmpty()
+    .withMessage('otp is required')
+    .isLength({ max: 6, min: 6 })
+    .withMessage('otp must be exactly 6 digits long')
+];
+
+export const registerResendOtpValidator = [
+  body('otp_id').notEmpty().withMessage('otp_id is required'),
+];
+
 export const loginValidator = [
   body('email').isEmail().withMessage('Must be a valid email'),
   body('password').notEmpty().withMessage('Password is required'),
@@ -20,7 +33,7 @@ export const loginVerifyOtpValidator = [
     .withMessage('otp must be exactly 6 digits long')
 ];
 
-export const resendOtpValidator = [
+export const loginResendOtpValidator = [
   body('otp_id').notEmpty().withMessage('otp_id is required'),
 ];
 

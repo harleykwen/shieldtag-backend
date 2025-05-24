@@ -1,6 +1,6 @@
 import express, { NextFunction, Request, Response } from 'express';
-import { login, loginVerifyOtp, register, resendOtp } from '../controllers/auth.controller';
-import { loginValidator, loginVerifyOtpValidator, registerValidator, resendOtpValidator, validateRequest } from '../middlewares/auth.middleware';
+import { login, loginVerifyOtp, register, registerResendOtp, registerVerifyOtp, loginResendOtp } from '../controllers/auth.controller';
+import { loginValidator, loginVerifyOtpValidator, registerValidator, registerVerifyOtpValidator, loginResendOtpValidator, validateRequest, registerResendOtpValidator } from '../middlewares/auth.middleware';
 
 const router = express.Router();
 
@@ -12,6 +12,28 @@ router.post(
   },
   (req: Request, res: Response, next: NextFunction) => {
     register(req, res).catch(next);
+  }
+);
+
+router.post(
+  '/register/verify',
+  registerVerifyOtpValidator,
+  (req: Request, res: Response, next: NextFunction) => {
+    validateRequest(req, res, next)
+  },
+  (req: Request, res: Response, next: NextFunction) => {
+    registerVerifyOtp(req, res).catch(next);
+  }
+);
+
+router.post(
+  '/register/resend-otp',
+  registerResendOtpValidator,
+  (req: Request, res: Response, next: NextFunction) => {
+    validateRequest(req, res, next)
+  },
+  (req: Request, res: Response, next: NextFunction) => {
+    registerResendOtp(req, res).catch(next);
   }
 );
 
@@ -38,13 +60,13 @@ router.post(
 );
 
 router.post(
-  '/resend-otp',
-  resendOtpValidator,
+  '/login/resend-otp',
+  loginResendOtpValidator,
   (req: Request, res: Response, next: NextFunction) => {
     validateRequest(req, res, next)
   },
   (req: Request, res: Response, next: NextFunction) => {
-    resendOtp(req, res).catch(next);
+    loginResendOtp(req, res).catch(next);
   }
 );
 
