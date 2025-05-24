@@ -16,7 +16,10 @@ export async function verifyToken(
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ message: 'You are unauthorized' });
+    return res.status(401).json({
+      error: true,
+      message: 'You are unauthorized'
+    });
   }
 
   const token = authHeader.split(' ')[1];

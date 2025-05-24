@@ -34,7 +34,8 @@ export async function register(req: Request, res: Response): Promise<Response> {
       error: false,
       message: "We've sent an One-Time Password (OTP) to your email address. Please check your inbox (and spam folder, just in case) to retrieve the OTP and complete your registration.",
       data: {
-        otp_id: createOtp._id
+        otp_id: createOtp._id,
+        expired_at: expiresAt.getTime()
       }
     });
   } catch (err) {
@@ -105,7 +106,8 @@ export async function registerResendOtp(req: Request, res: Response): Promise<Re
       error: false,
       message: "We've sent an One-Time Password (OTP) to your registered email address. Please check your inbox (and spam folder, just in case) to retrieve the OTP and complete your login.",
       data: {
-        otp_id: createOtp._id
+        otp_id: createOtp._id,
+        expired_at: expiresAt
       }
     });
   } catch (err) {
@@ -138,7 +140,8 @@ export async function login(req: Request, res: Response): Promise<Response> {
       error: false,
       message: "We've sent an One-Time Password (OTP) to your registered email address. Please check your inbox (and spam folder, just in case) to retrieve the OTP and complete your login.",
       data: {
-        otp_id: createOtp._id
+        otp_id: createOtp._id,
+        expired_at: expiresAt
       }
     });
   } catch (err) {
@@ -196,7 +199,8 @@ export async function loginResendOtp(req: Request, res: Response): Promise<Respo
       error: false,
       message: "We've sent an One-Time Password (OTP) to your registered email address. Please check your inbox (and spam folder, just in case) to retrieve the OTP and complete your login.",
       data: {
-        otp_id: createOtp._id
+        otp_id: createOtp._id,
+        expired_at: expiresAt
       }
     });
   } catch (err) {
@@ -223,7 +227,8 @@ export async function forgotPasswordRequestOtp(req: Request, res: Response): Pro
       error: false,
       message: "We've sent an One-Time Password (OTP) to your registered email address. Please check your inbox (and spam folder, just in case) to retrieve the OTP and continue to change your password.",
       data: {
-        otp_id: createOtp._id
+        otp_id: createOtp._id,
+        expired_at: expiresAt
       }
     });
   } catch (err) {
@@ -280,7 +285,8 @@ export async function forgotPasswordResendOtp(req: Request, res: Response): Prom
       error: false,
       message: "We've sent an One-Time Password (OTP) to your registered email address. Please check your inbox (and spam folder, just in case) to retrieve the OTP and reset your password.",
       data: {
-        otp_id: createOtp._id
+        otp_id: createOtp._id,
+        expired_at: expiresAt
       }
     });
   } catch (err) {
@@ -307,8 +313,9 @@ export async function forgotPasswordReset(req: Request, res: Response): Promise<
 
     const hashedPassword = await bcrypt.hash(password, 10);
     await UserModel.findOneAndUpdate(
-      { id: user._id },
+      { _id: user._id },
       { $set: { password: hashedPassword } },
+      { new: true }
     )
 
     return res.status(200).json({

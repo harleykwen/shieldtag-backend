@@ -2,7 +2,7 @@ import { body, validationResult } from 'express-validator';
 import { Request, Response, NextFunction } from 'express';
 
 export const registerValidator = [
-  body('email').isEmail().withMessage('Must be a valid email'),
+  body('email').isEmail().withMessage('Email must be valid'),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
 ];
 
@@ -20,7 +20,7 @@ export const registerResendOtpValidator = [
 ];
 
 export const loginValidator = [
-  body('email').isEmail().withMessage('Must be a valid email'),
+  body('email').isEmail().withMessage('Email must be valid'),
   body('password').notEmpty().withMessage('Password is required'),
 ];
 
@@ -38,7 +38,7 @@ export const loginResendOtpValidator = [
 ];
 
 export const forgotPasswordRequestOtpValidator = [
-  body('email').isEmail().withMessage('Must be a valid email'),
+  body('email').isEmail().withMessage('Email must be valid'),
 ];
 
 export const forgotPasswordVerifyOtpValidator = [
@@ -62,7 +62,10 @@ export const forgotPasswordResetValidator = [
 export const validateRequest = (req: Request, res: Response, next: NextFunction) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+    return res.status(400).json({
+      error: true,
+      message: errors.array()[0].msg
+    });
   }
   next();
 };

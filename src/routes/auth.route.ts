@@ -71,7 +71,7 @@ router.post(
 );
 
 router.post(
-  '/forgot-password/request-otp',
+  '/forgot-password',
   forgotPasswordRequestOtpValidator,
   (req: Request, res: Response, next: NextFunction) => {
     validateRequest(req, res, next)
