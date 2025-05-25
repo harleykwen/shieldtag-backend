@@ -9,6 +9,7 @@ import { generateOTP } from '../utils/otp.util';
 
 const JWT_SECRET = process.env.JWT_SECRET as string;
 const JWT_SECRET_FORGOT_PASSWORD = process.env.JWT_SECRET_FORGOT_PASSWORD as string;
+const EXPIRES_OTP = () => new Date(Date.now() + 1 * 60 * 1000); // 10 minutes
 
 export async function register(req: Request, res: Response): Promise<Response> {
   const { email, password } = req.body;
@@ -21,7 +22,7 @@ export async function register(req: Request, res: Response): Promise<Response> {
     });
 
     const code = generateOTP();
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    const expiresAt = EXPIRES_OTP()
     const createOtp = await OtpModel.create({ email, code, type: 'register', expiresAt })
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -49,73 +50,100 @@ export async function registerVerifyOtp(req: Request, res: Response): Promise<Re
 
   try {
     const record = await OtpModel.findOne({ _id: otp_id, code: otp, type: 'register' });
-    if (!record || record.expiresAt < new Date()) return res.status(400).json({
-      error: true,
-      message: 'Invalid or expired OTP'
-    });
+    if (!record || record.expiresAt < new Date()) {
+      return res.status(400).json({
+        error: true,
+        message: 'Invalid or expired OTP'
+      });
+    }
 
     const registration = await RegistrationModel.findOne({ otp_id: record._id });
-    if (!registration) return res.status(400).json({
-      error: true,
-      message: 'Your registration session is invalid. Please create new registration to continue'
-    });
+    if (!registration) {
+      return res.status(400).json({
+        error: true,
+        message: 'Your registration session is invalid. Please create a new registration to continue.'
+      });
+    }
 
-    const isExist = await UserModel.findOne({ email: registration.email });
-    if (isExist) return res.status(404).json({
-      error: true,
-      message: 'Email already registered'
-    });
+    const existingUser = await UserModel.findOne({ email: registration.email });
+    if (existingUser) {
+      return res.status(409).json({
+        error: true,
+        message: 'Email already registered'
+      });
+    }
 
-    const newUser = new UserModel({ email: registration.email, password: registration.password });
+    const newUser = new UserModel({
+      email: registration.email,
+      password: registration.password
+    });
     await newUser.save();
+
+    // Clean up OTP and registration data
     await RegistrationModel.deleteMany({ email: record.email });
     await OtpModel.deleteMany({ email: record.email, type: 'register' });
 
     return res.status(200).json({
       error: false,
-      message: "Registration successful",
+      message: 'Registration successful',
     });
   } catch (err) {
-    return res.status(500).json({ error: 'Server error' });
+    console.error('Error in registerVerifyOtp:', err);
+    return res.status(500).json({ error: true, message: 'Server error' });
   }
-};
+}
 
 export async function registerResendOtp(req: Request, res: Response): Promise<Response> {
   const { otp_id } = req.body;
 
   try {
     const record = await OtpModel.findOne({ _id: otp_id });
-    if (!record) return res.status(400).json({
-      error: true,
-      message: "Your OTP session has invalid. Please request a new register session to continue."
-    });
-    if (record.expiresAt > new Date()) return res.status(400).json({
-      error: true,
-      message: "Your OTP session is valid. You may proceed with verification."
+    if (!record) {
+      return res.status(400).json({
+        error: true,
+        message: 'Your OTP session is invalid. Please start a new registration process.'
+      });
+    }
+
+    if (record.expiresAt > new Date()) {
+      return res.status(400).json({
+        error: true,
+        message: 'Your OTP is still valid. Please use the current OTP to verify.'
+      });
+    }
+
+    // Generate new OTP
+    const code = generateOTP();
+    const expiresAt = EXPIRES_OTP();
+    const newOtp = await OtpModel.create({
+      email: record.email,
+      code,
+      type: record.type,
+      expiresAt
     });
 
-    const code = generateOTP();
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-    const createOtp = await OtpModel.create({ email: record.email, code, type: record.type, expiresAt })
+    // Update registration record with new otp_id
     await RegistrationModel.findOneAndUpdate(
-      { email: 'harleykwen.work2@gmail.com' },
-      { $set: { otp_id: createOtp._id } },
+      { email: record.email, otp_id: record._id },
+      { $set: { otp_id: newOtp._id } }
     );
 
+    // Send OTP via email
     await sendMail(record.email, 'Your Registration OTP', `Your OTP is ${code}`);
 
     return res.status(200).json({
       error: false,
-      message: "We've sent an One-Time Password (OTP) to your registered email address. Please check your inbox (and spam folder, just in case) to retrieve the OTP and complete your login.",
+      message: "We've sent a new One-Time Password (OTP) to your registered email address.",
       data: {
-        otp_id: createOtp._id,
+        otp_id: newOtp._id,
         expired_at: expiresAt
       }
     });
   } catch (err) {
-    return res.status(500).json({ error: 'Server error' });
+    console.error('Error in registerResendOtp:', err);
+    return res.status(500).json({ error: true, message: 'Server error' });
   }
-};
+}
 
 export async function login(req: Request, res: Response): Promise<Response> {
   const { email, password } = req.body;
@@ -134,7 +162,7 @@ export async function login(req: Request, res: Response): Promise<Response> {
     });
 
     const code = generateOTP();
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    const expiresAt = EXPIRES_OTP()
     const createOtp = await OtpModel.create({ email, code, type: 'login', expiresAt })
     await sendMail(email, 'Your Login OTP', `Your OTP is ${code}`);
 
@@ -194,7 +222,7 @@ export async function loginResendOtp(req: Request, res: Response): Promise<Respo
     });
 
     const code = generateOTP();
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    const expiresAt = EXPIRES_OTP()
     const createOtp = await OtpModel.create({ email: record.email, code, type: record.type, expiresAt })
 
     await sendMail(record.email, 'Your Login OTP', `Your OTP is ${code}`);
@@ -223,7 +251,7 @@ export async function forgotPasswordRequestOtp(req: Request, res: Response): Pro
     });
 
     const code = generateOTP();
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    const expiresAt = EXPIRES_OTP()
     const createOtp = await OtpModel.create({ email, code, type: 'forgot-password', expiresAt })
     await sendMail(email, 'Your Change Password OTP', `Your OTP is ${code}`);
 
@@ -282,7 +310,7 @@ export async function forgotPasswordResendOtp(req: Request, res: Response): Prom
     });
 
     const code = generateOTP();
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    const expiresAt = EXPIRES_OTP()
     const createOtp = await OtpModel.create({ email: record.email, code, type: record.type, expiresAt })
     await sendMail(record.email, 'Your Change Password OTP', `Your OTP is ${code}`);
 
