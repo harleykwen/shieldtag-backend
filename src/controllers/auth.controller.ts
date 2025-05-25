@@ -102,6 +102,8 @@ export async function registerResendOtp(req: Request, res: Response): Promise<Re
       { $set: { otp_id: createOtp._id } },
     );
 
+    await sendMail(record.email, 'Your Registration OTP', `Your OTP is ${code}`);
+
     return res.status(200).json({
       error: false,
       message: "We've sent an One-Time Password (OTP) to your registered email address. Please check your inbox (and spam folder, just in case) to retrieve the OTP and complete your login.",
@@ -195,6 +197,8 @@ export async function loginResendOtp(req: Request, res: Response): Promise<Respo
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
     const createOtp = await OtpModel.create({ email: record.email, code, type: record.type, expiresAt })
 
+    await sendMail(record.email, 'Your Login OTP', `Your OTP is ${code}`);
+
     return res.status(200).json({
       error: false,
       message: "We've sent an One-Time Password (OTP) to your registered email address. Please check your inbox (and spam folder, just in case) to retrieve the OTP and complete your login.",
@@ -280,6 +284,7 @@ export async function forgotPasswordResendOtp(req: Request, res: Response): Prom
     const code = generateOTP();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
     const createOtp = await OtpModel.create({ email: record.email, code, type: record.type, expiresAt })
+    await sendMail(record.email, 'Your Change Password OTP', `Your OTP is ${code}`);
 
     return res.status(200).json({
       error: false,
